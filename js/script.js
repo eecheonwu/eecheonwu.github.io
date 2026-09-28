@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadProjects();
     setupSmoothScroll();
     setupNavigation();
+    setupMobileMenu();
 });
 
 // Load projects from GitHub API
@@ -53,6 +54,11 @@ function displayCategory(categoryKey, repos) {
 
     container.innerHTML = '';
 
+    if (repos.length === 0) {
+        container.innerHTML = '<div class="loading-state">No repositories found.</div>';
+        return;
+    }
+
     repos.forEach(repo => {
         const card = createProjectCard(repo);
         container.appendChild(card);
@@ -72,11 +78,11 @@ function createProjectCard(repo) {
         <h4>${repo.name}</h4>
         ${repo.language ? `<span class="language">${language}</span>` : ''}
         <p>${description}</p>
-        <div style="display: flex; gap: 1rem; font-size: 0.85rem; color: var(--text-light); margin-bottom: 1rem;">
-            <span>⭐ ${stars} stars</span>
-            <span>👀 ${repo.watchers_count} watchers</span>
+        <div class="project-stats">
+            <span>⭐ ${stars}</span>
+            <span>👀 ${repo.watchers_count}</span>
         </div>
-        <a href="${repo.html_url}" target="_blank">View on GitHub →</a>
+        <a href="${repo.html_url}" target="_blank">View on GitHub &rarr;</a>
     `;
 
     return card;
@@ -108,7 +114,7 @@ function setupNavigation() {
 
         sections.forEach(section => {
             const sectionTop = section.offsetTop;
-            if (pageYOffset >= sectionTop - 60) {
+            if (pageYOffset >= sectionTop - 100) {
                 current = section.getAttribute('id');
             }
         });
@@ -122,10 +128,53 @@ function setupNavigation() {
     });
 }
 
-// Add loading animation
-function showLoadingState() {
-    const projectContainers = document.querySelectorAll('[id$="-projects"]');
-    projectContainers.forEach(container => {
-        container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-light);">Loading repositories...</div>';
-    });
+// Setup mobile menu
+function setupMobileMenu() {
+    const mobileBtn = document.querySelector('.mobile-menu-btn');
+    const navLinks = document.querySelector('.nav-links');
+
+    if (mobileBtn && navLinks) {
+        mobileBtn.addEventListener('click', () => {
+            const isFlex = navLinks.style.display === 'flex';
+            navLinks.style.display = isFlex ? 'none' : 'flex';
+            
+            if (!isFlex) {
+                navLinks.style.flexDirection = 'column';
+                navLinks.style.position = 'absolute';
+                navLinks.style.top = '100%';
+                navLinks.style.left = '0';
+                navLinks.style.width = '100%';
+                navLinks.style.backgroundColor = 'rgba(255, 255, 255, 0.98)';
+                navLinks.style.padding = '1.5rem';
+                navLinks.style.borderBottom = '1px solid var(--border)';
+                navLinks.style.boxShadow = 'var(--shadow-md)';
+                navLinks.style.gap = '1.5rem';
+            }
+        });
+
+        // Close menu on link click (mobile)
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    navLinks.style.display = 'none';
+                }
+            });
+        });
+        
+        // Reset styles on window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                navLinks.style.display = 'flex';
+                navLinks.style.flexDirection = 'row';
+                navLinks.style.position = 'static';
+                navLinks.style.backgroundColor = 'transparent';
+                navLinks.style.padding = '0';
+                navLinks.style.borderBottom = 'none';
+                navLinks.style.boxShadow = 'none';
+                navLinks.style.gap = '2rem';
+            } else {
+                navLinks.style.display = 'none';
+            }
+        });
+    }
 }
